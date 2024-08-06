@@ -4,7 +4,8 @@ import sqlite3
 import json
 import traceback
 
-DATABASE = 'sponsor_dashboard.db'
+# Determine the absolute path to the database file
+DATABASE = os.path.abspath(os.path.join(os.path.dirname(__file__), 'sponsor_dashboard.db'))
 
 def get_db():
     conn = sqlite3.connect(DATABASE)
