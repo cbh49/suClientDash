@@ -217,89 +217,97 @@
             })
             .catch(error => console.error('Error:', error));
         });
-
+        
         function updatePartialRequestsTable(data) {
-            console.log('Updating partial requests table with data:', data);
-            const tableBody = document.querySelector('#partialRequestsTable tbody');
-            const noRequestsMessage = document.getElementById('noRequestsMessage');
+    console.log('Updating partial requests table with data:', data);
+    const tableBody = document.querySelector('#partialRequestsTable tbody');
+    const noRequestsMessage = document.getElementById('noRequestsMessage');
 
-            tableBody.innerHTML = '';
-            if (data.length === 0) {
-                noRequestsMessage.style.display = 'block'; 
-            } else {
-                noRequestsMessage.style.display = 'none';
-                data.forEach((item, index) => {
-                    const row = document.createElement('tr');
-                    const clientCell = document.createElement('td');
-                    clientCell.textContent = item.client;
-                    row.appendChild(clientCell);
+    // Ensure data.partialRequests is an array
+    const requests = data.partialRequests || [];
 
-                    const requestCell = document.createElement('td');
-                    requestCell.textContent = item.request;
-                    row.appendChild(requestCell);
+    tableBody.innerHTML = '';
+    if (requests.length === 0) {
+        noRequestsMessage.style.display = 'block';
+    } else {
+        noRequestsMessage.style.display = 'none';
+        requests.forEach((item, index) => {
+            const row = document.createElement('tr');
+            const clientCell = document.createElement('td');
+            clientCell.textContent = item.client;
+            row.appendChild(clientCell);
 
-                    const selectCell = document.createElement('td');
-                    const selectButton = document.createElement('button');
-                    selectButton.textContent = 'Select';
-                    selectButton.dataset.index = index;
-                    selectButton.dataset.clientId = item.clientId;
-                    selectButton.addEventListener('click', function() {
-                        document.getElementById('clientId').value = item.clientId;
-                        document.querySelector('.identifier').textContent = 'Request for: ' + item.client;
-                        document.getElementById('clientFormPart2').style.display = 'block';
-                        document.getElementById('clientData').value = JSON.stringify(item);
-                    });
-                    selectCell.appendChild(selectButton);
-                    row.appendChild(selectCell);
+            const requestCell = document.createElement('td');
+            requestCell.textContent = item.request;
+            row.appendChild(requestCell);
 
-                    tableBody.appendChild(row);
-                });
-            }
-        }
-
-        function updateFinalTable(data) {
-            console.log('Updating final table with data:', data);  // Debugging line
-            const tableBody = document.querySelector('#finalRequestsTable tbody');
-            tableBody.innerHTML = '';
-            data.forEach((item, index) => {
-                const row = document.createElement('tr');
-                
-                const clientCell = document.createElement('td');
-                clientCell.textContent = item[1];  // Correct index for client name
-                row.appendChild(clientCell);
-
-                const requestCell = document.createElement('td');
-                requestCell.textContent = item[2];  // Correct index for request
-                row.appendChild(requestCell);
-
-                const totalCell = document.createElement('td');
-                totalCell.textContent = item[3];  // Correct index for total
-                row.appendChild(totalCell);
-
-                const averageCell = document.createElement('td');
-                if (item[4] !== undefined && item[4] !== null) {
-                    averageCell.textContent = parseFloat(item[4]).toFixed(2);  // Correct index for average
-                } else {
-                    averageCell.textContent = 'N/A';  // Handle undefined or null average
-                }
-                row.appendChild(averageCell);
-
-                const trashCell = document.createElement('td');
-                const button = document.createElement('button');
-                button.dataset.clientId = item[0];  // Store clientId in dataset
-                const img = document.createElement('img');
-                img.src = '/static/trash.png';
-                img.alt = 'Trash';
-                img.style.width = '20px';
-
-                button.appendChild(img);
-                trashCell.appendChild(button);
-                row.appendChild(trashCell);
-                button.addEventListener('click', handleDelete);
-
-                tableBody.appendChild(row);
+            const selectCell = document.createElement('td');
+            const selectButton = document.createElement('button');
+            selectButton.textContent = 'Select';
+            selectButton.dataset.index = index;
+            selectButton.dataset.clientId = item.clientId;
+            selectButton.addEventListener('click', function() {
+                document.getElementById('clientId').value = item.clientId;
+                document.querySelector('.identifier').textContent = 'Request for: ' + item.client;
+                document.getElementById('clientFormPart2').style.display = 'block';
+                document.getElementById('clientData').value = JSON.stringify(item);
             });
+            selectCell.appendChild(selectButton);
+            row.appendChild(selectCell);
+
+            tableBody.appendChild(row);
+        });
+    }
+}
+
+function updateFinalTable(data) {
+    console.log('Updating final table with data:', data);
+    const tableBody = document.querySelector('#finalRequestsTable tbody');
+
+    // Ensure data.finalRequests is an array
+    const requests = data.finalRequests || [];
+
+    tableBody.innerHTML = '';
+    requests.forEach((item, index) => {
+        const row = document.createElement('tr');
+        
+        const clientCell = document.createElement('td');
+        clientCell.textContent = item[1];  // Correct index for client name
+        row.appendChild(clientCell);
+
+        const requestCell = document.createElement('td');
+        requestCell.textContent = item[2];  // Correct index for request
+        row.appendChild(requestCell);
+
+        const totalCell = document.createElement('td');
+        totalCell.textContent = item[3];  // Correct index for total
+        row.appendChild(totalCell);
+
+        const averageCell = document.createElement('td');
+        if (item[4] !== undefined && item[4] !== null) {
+            averageCell.textContent = parseFloat(item[4]).toFixed(2);  // Correct index for average
+        } else {
+            averageCell.textContent = 'N/A';  // Handle undefined or null average
         }
+        row.appendChild(averageCell);
+
+        const trashCell = document.createElement('td');
+        const button = document.createElement('button');
+        button.dataset.clientId = item[0];  // Store clientId in dataset
+        const img = document.createElement('img');
+        img.src = '/static/trash.png';
+        img.alt = 'Trash';
+        img.style.width = '20px';
+
+        button.appendChild(img);
+        trashCell.appendChild(button);
+        row.appendChild(trashCell);
+        button.addEventListener('click', handleDelete);
+
+        tableBody.appendChild(row);
+    });
+}
+
 
         function handleDelete(event) {
             const button = event.currentTarget;
