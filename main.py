@@ -6,6 +6,7 @@ import json
 # Database Path
 DATABASE = os.path.join(os.path.dirname(__file__), 'sponsor_dashboard.db')
 
+
 def get_db():
     conn = sqlite3.connect(DATABASE)
     return conn
@@ -54,7 +55,9 @@ def submit_form_part1():
         
         return jsonify({'partialRequests': partial_requests})
     except Exception as e:
+        app.logger.error('Error in submit-form-part1: %s', str(e))
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/submit-form-part2', methods=['POST'])
 def submit_form_part2():
