@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sponsor Dashboard</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="topArea">
+            <img src="/static/SUcircle.png" alt="SU Logo" height="80px">
+            <h1>Client Request Dashboard</h1><br>
+        </div>
+
+        <div id="deleteModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <p>Are you sure you want to delete?</p>
+                <button id="confirmDelete">Yes</button>
+                <button id="cancelDelete">No</button>
+            </div>
+        </div>
+
+        <div class="form-table-container">
+            <form id="clientFormPart1" method="POST" action="/submit-form-part1">
+                <div class="form-group">
+                    <label for="client">Client:</label>
+                    <input type="text" id="client" name="client" required>
+                </div>
+                <div class="form-group">
+                    <label for="request">What is the request?</label>
+                    <input type="text" id="request" name="request" required>
+                </div>
+                <div class="form-group">
+                    <label for="atRisk">Is the client at risk?</label><br>
+                    <input type="radio" id="atRiskYes" name="atRisk" value="5" required>
+                    <label for="atRiskYes" class="inline-label">Yes</label><br>
+                    <input type="radio" id="atRiskNo" name="atRisk" value="0">
+                    <label for="atRiskNo" class="inline-label">No</label>
+                </div>
+                <div class="form-group">
+                    <label for="quarter">Which quarter is the client up for Renewal in?</label><br>
+                    <input type="radio" id="quarter4" name="quarter" value="4" required>
+                    <label for="quarter4" class="inline-label">Next Quarter</label><br>
+                    <input type="radio" id="quarter3" name="quarter" value="3">
+                    <label for="quarter3" class="inline-label">2 Quarters</label><br>
+                    <input type="radio" id="quarter2" name="quarter" value="2">
+                    <label for="quarter2" class="inline-label">3 Quarters</label><br>
+                    <input type="radio" id="quarter1" name="quarter" value="1">
+                    <label for="quarter1" class="inline-label">4 Quarters</label><br>
+                    <input type="radio" id="quarter0" name="quarter" value="0">
+                    <label for="quarter0" class="inline-label">More than a year</label>
+                </div>
+                <div class="form-group">
+                    <label for="revenue">What is the Monthly Recurring Revenue (MRR)?</label><br>
+                    <input type="radio" id="revenue1" name="revenue" value="1" required>
+                    <label for="revenue1" class="inline-label">$0 - $500</label><br>
+                    <input type="radio" id="revenue2" name="revenue" value="2">
+                    <label for="revenue2" class="inline-label">$501 - $1000</label><br>
+                    <input type="radio" id="revenue3" name="revenue" value="3">
+                    <label for="revenue3" class="inline-label">$1001 - $2000</label><br>
+                    <input type="radio" id="revenue4" name="revenue" value="4">
+                    <label for="revenue4" class="inline-label">$2001 - $5000</label><br>
+                    <input type="radio" id="revenue5" name="revenue" value="5">
+                    <label for="revenue5" class="inline-label">$5001+</label>
+                </div>
+                <div class="form-group">
+                    <label for="comp">Do we have any other clients in the same Category or League?</label><br>
+                    <input type="radio" id="compYes" name="comp" value="3" required>
+                    <label for="compYes" class="inline-label">Yes</label><br>
+                    <input type="radio" id="compNo" name="comp" value="0">
+                    <label for="compNo" class="inline-label">No</label>
+                </div>
+                <div class="form-group">
+                    <label for="additional">Does this request have a high potential for additional revenue or cross-selling opportunities?</label><br>
+                    <input type="radio" id="additional5" name="additional" value="5" required>
+                    <label for="additional5" class="inline-label">High Potential</label><br>
+                    <input type="radio" id="additional3" name="additional" value="3">
+                    <label for="additional3" class="inline-label">Medium Potential</label><br>
+                    <input type="radio" id="additional1" name="additional" value="1">
+                    <label for="additional1" class="inline-label">Low Potential</label>
+                </div>
+                <div class="form-group">
+                    <label for="urgency">How urgent is the request?</label><br>
+                    <input type="radio" id="urgency5" name="urgency" value="5" required>
+                    <label for="urgency5" class="inline-label">Immediate</label><br>
+                    <input type="radio" id="urgency4" name="urgency" value="4">
+                    <label for="urgency4" class="inline-label">High</label><br>
+                    <input type="radio" id="urgency3" name="urgency" value="3">
+                    <label for="urgency3" class="inline-label">Medium</label><br>
+                    <input type="radio" id="urgency2" name="urgency" value="2">
+                    <label for="urgency2" class="inline-label">Low</label><br>
+                    <input type="radio" id="urgency0" name="urgency" value="0">
+                    <label for="urgency0" class="inline-label">Not urgent</label>
+                </div>
+                <button type="submit" id="submitBtn1">Submit Part 1</button>
+            </form>
+
+            <div class="table-container">
+                <h1>Open Client Solutions Requests</h1>
+                <table id="partialRequestsTable">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Request</th>
+                            <th>Select</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dynamically Stored Data -->
+                    </tbody>
+                </table>
+                <p id="noRequestsMessage" style="display: none;">No current requests to fill.</p>
+            </div>
+        </div>
+
+        <form id="clientFormPart2" method="POST" action="/submit-form-part2" style="display:none;">
+            <input type="hidden" id="clientId" name="clientId">
+            <input type="hidden" id="clientData" name="clientData">
+            <div class="identifier"> </div><br>
+
+            <div class="form-group">
+                <label for="scout">Do we currently scout the league or property?</label><br>
+                <input type="radio" id="scoutYes" name="scout" value="2" required>
+                <label for="scoutYes" class="inline-label">Yes</label><br>
+                <input type="radio" id="scoutNo" name="scout" value="0">
+                <label for="scoutNo" class="inline-label">No</label>
+            </div>
+            <div class="form-group">
+                <label for="country">Do we currently scout that country?</label><br>
+                <input type="radio" id="countryYes" name="country" value="2" required>
+                <label for="countryYes" class="inline-label">Yes</label><br>
+                <input type="radio" id="countryNo" name="country" value="0">
+                <label for="countryNo" class="inline-label">No</label>
+            </div>
+            <div class="form-group">
+                <label for="resources">Do we have available resources to fulfill this request?</label><br>
+                <input type="radio" id="resources3" name="resources" value="3" required>
+                <label for="resources3" class="inline-label">Fully</label><br>
+                <input type="radio" id="resources2" name="resources" value="2">
+                <label for="resources2" class="inline-label">Partially</label><br>
+                <input type="radio" id="resources1" name="resources" value="1">
+                <label for="resources1" class="inline-label">Limited</label><br>
+                <input type="radio" id="resources0" name="resources" value="0">
+                <label for="resources0" class="inline-label">No</label>
+            </div>
+            <div class="form-group">
+                <label for="strategic">Is there a strategic importance to this request?</label><br>
+                <input type="radio" id="strategic5" name="strategic" value="5" required>
+                <label for="strategic5" class="inline-label">High</label><br>
+                <input type="radio" id="strategic3" name="strategic" value="3">
+                <label for="strategic3" class="inline-label">Medium</label><br>
+                <input type="radio" id="strategic1" name="strategic" value="1">
+                <label for="strategic1" class="inline-label">Low</label><br>
+                <input type="radio" id="strategic0" name="strategic" value="0">
+                <label for="strategic0" class="inline-label">None</label>
+            </div>
+            <button type="submit" id="submitBtn2">Submit Part 2</button>
+        </form>
+
+        <div class="table-container">
+            <h1>Prioritized Client Solutions Requests Table</h1>
+            <table id="finalRequestsTable">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Request</th>
+                        <th>Total</th>
+                        <th>Average</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamically Stored Data -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('clientFormPart1').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('/submit-form-part1', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Form part 1 submission data:', data);  // Debugging line
+                updatePartialRequestsTable(data);
+                this.reset();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        document.getElementById('clientFormPart2').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('/submit-form-part2', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Form part 2 submission data:', data);  // Debugging line
+                document.getElementById('clientFormPart2').style.display = 'none';
+                updateFinalTable(data.finalRequests);
+                this.reset();
+                fetch('/get-partial-requests')
+                    .then(response => response.json())
+                    .then(data => {
+                        updatePartialRequestsTable(data);
+                    })
+                    .catch(error => console.error('Error fetching partial requests: ', error));
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function updatePartialRequestsTable(data) {
+            console.log('Updating partial requests table with data:', data);
+            const tableBody = document.querySelector('#partialRequestsTable tbody');
+            const noRequestsMessage = document.getElementById('noRequestsMessage');
+
+            tableBody.innerHTML = '';
+            if (data.length === 0) {
+                noRequestsMessage.style.display = 'block'; 
+            } else {
+                noRequestsMessage.style.display = 'none';
+                data.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    const clientCell = document.createElement('td');
+                    clientCell.textContent = item.client;
+                    row.appendChild(clientCell);
+
+                    const requestCell = document.createElement('td');
+                    requestCell.textContent = item.request;
+                    row.appendChild(requestCell);
+
+                    const selectCell = document.createElement('td');
+                    const selectButton = document.createElement('button');
+                    selectButton.textContent = 'Select';
+                    selectButton.dataset.index = index;
+                    selectButton.dataset.clientId = item.clientId;
+                    selectButton.addEventListener('click', function() {
+                        document.getElementById('clientId').value = item.clientId;
+                        document.querySelector('.identifier').textContent = 'Request for: ' + item.client;
+                        document.getElementById('clientFormPart2').style.display = 'block';
+                        document.getElementById('clientData').value = JSON.stringify(item);
+                    });
+                    selectCell.appendChild(selectButton);
+                    row.appendChild(selectCell);
+
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+
+        function updateFinalTable(data) {
+            console.log('Updating final table with data:', data);  // Debugging line
+            const tableBody = document.querySelector('#finalRequestsTable tbody');
+            tableBody.innerHTML = '';
+            data.forEach((item, index) => {
+                const row = document.createElement('tr');
+                
+                const clientCell = document.createElement('td');
+                clientCell.textContent = item[1];  // Correct index for client name
+                row.appendChild(clientCell);
+
+                const requestCell = document.createElement('td');
+                requestCell.textContent = item[2];  // Correct index for request
+                row.appendChild(requestCell);
+
+                const totalCell = document.createElement('td');
+                totalCell.textContent = item[3];  // Correct index for total
+                row.appendChild(totalCell);
+
+                const averageCell = document.createElement('td');
+                if (item[4] !== undefined && item[4] !== null) {
+                    averageCell.textContent = parseFloat(item[4]).toFixed(2);  // Correct index for average
+                } else {
+                    averageCell.textContent = 'N/A';  // Handle undefined or null average
+                }
+                row.appendChild(averageCell);
+
+                const trashCell = document.createElement('td');
+                const button = document.createElement('button');
+                button.dataset.clientId = item[0];  // Store clientId in dataset
+                const img = document.createElement('img');
+                img.src = '/static/trash.png';
+                img.alt = 'Trash';
+                img.style.width = '20px';
+
+                button.appendChild(img);
+                trashCell.appendChild(button);
+                row.appendChild(trashCell);
+                button.addEventListener('click', handleDelete);
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        function handleDelete(event) {
+            const button = event.currentTarget;
+            const clientId = button.dataset.clientId;
+
+            const modal = document.getElementById('deleteModal');
+            modal.style.display = 'block';
+
+            const confirmDelete = document.getElementById('confirmDelete');
+            const cancelDelete = document.getElementById('cancelDelete');
+            const closeModal = document.getElementsByClassName('close')[0];
+
+            confirmDelete.onclick = function() {
+                fetch(`/delete-entry/${clientId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    updateFinalTable(data);
+                    modal.style.display = 'none';
+                })
+                .catch(error => console.error('Error:', error));
+                modal.style.display = 'none';
+            }
+
+            cancelDelete.onclick = function() {
+                modal.style.display = 'none';
+            }
+
+            closeModal.onclick = function() {
+                modal.style.display = 'none';
+            }
+        }
+
+        window.onload = function() {
+            fetch('/get-partial-requests')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Partial requests data:', data);
+                updatePartialRequestsTable(data);
+            })
+            .catch(error => console.error('Error fetching partial requests:', error));
+
+            fetch('/get-final-requests')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Final requests data:', data);
+                updateFinalTable(data);
+            })
+            .catch(error => console.error('Error fetching final requests:', error));
+        }
+    </script>
+</body>
+</html>
