@@ -60,18 +60,18 @@ def submit_form_part1():
         atRisk = int(data.get('atRisk'))
         quarter = int(data.get('quarter'))
         revenue = int(data.get('revenue'))
-        
+
         conn = get_db()
         c = conn.cursor()
         c.execute('''INSERT INTO partial_requests (client, request, atRisk, quarter, revenue)
                      VALUES (?, ?, ?, ?, ?)''',
                   (client, request_text, atRisk, quarter, revenue))
         conn.commit()
-        
-        partial_requests = query_db('SELECT * FROM partial_requests')
+
+        partial_requests = fetch_partial_requests()
         conn.close()
 
-        return jsonify({'partialRequests': partial_requests})
+        return jsonify(partial_requests)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -102,13 +102,14 @@ def submit_form_part2():
                   (clientId, client_data['client'], client_data['request'], total, average))
         c.execute('DELETE FROM partial_requests WHERE clientId = ?', [clientId])
         conn.commit()
-        
+
         final_requests = query_db('SELECT * FROM final_requests ORDER BY total DESC')
         conn.close()
 
-        return jsonify({'finalRequests': final_requests})
+        return jsonify(final_requests)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/get-partial-requests', methods=['GET'])
 def get_partial_requests():

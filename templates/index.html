@@ -179,59 +179,56 @@
     </div>
 
     <script>
-        document.getElementById('clientFormPart1').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            fetch('/submit-form-part1', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Form part 1 submission data:', data);  // Debugging line
-                updatePartialRequestsTable(data);
-                this.reset();
-            })
-            .catch(error => console.error('Error:', error));
-        });
+ document.getElementById('clientFormPart1').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    fetch('/submit-form-part1', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Form part 1 submission data:', data);  // Debugging line
+        updatePartialRequestsTable(data);
+        this.reset();
+    })
+    .catch(error => console.error('Error:', error));
+});
 
-        document.getElementById('clientFormPart2').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            fetch('/submit-form-part2', {
-                method: 'POST',
-                body: formData
-            })
+document.getElementById('clientFormPart2').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    fetch('/submit-form-part2', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Form part 2 submission data:', data);  // Debugging line
+        document.getElementById('clientFormPart2').style.display = 'none';
+        updateFinalTable(data);
+        this.reset();
+        fetch('/get-partial-requests')
             .then(response => response.json())
             .then(data => {
-                console.log('Form part 2 submission data:', data);  // Debugging line
-                document.getElementById('clientFormPart2').style.display = 'none';
-                updateFinalTable(data.finalRequests);
-                this.reset();
-                fetch('/get-partial-requests')
-                    .then(response => response.json())
-                    .then(data => {
-                        updatePartialRequestsTable(data);
-                    })
-                    .catch(error => console.error('Error fetching partial requests: ', error));
+                updatePartialRequestsTable(data);
             })
-            .catch(error => console.error('Error:', error));
-        });
-        
-        function updatePartialRequestsTable(data) {
+            .catch(error => console.error('Error fetching partial requests: ', error));
+    })
+    .catch(error => console.error('Error:', error));
+});
+
+function updatePartialRequestsTable(data) {
     console.log('Updating partial requests table with data:', data);
     const tableBody = document.querySelector('#partialRequestsTable tbody');
     const noRequestsMessage = document.getElementById('noRequestsMessage');
 
-    // Ensure data.partialRequests is an array
-    const requests = data.partialRequests || [];
-
     tableBody.innerHTML = '';
-    if (requests.length === 0) {
+    if (data.length === 0) {
         noRequestsMessage.style.display = 'block';
     } else {
         noRequestsMessage.style.display = 'none';
-        requests.forEach((item, index) => {
+        data.forEach((item, index) => {
             const row = document.createElement('tr');
             const clientCell = document.createElement('td');
             clientCell.textContent = item.client;
@@ -264,28 +261,25 @@ function updateFinalTable(data) {
     console.log('Updating final table with data:', data);
     const tableBody = document.querySelector('#finalRequestsTable tbody');
 
-    // Ensure data.finalRequests is an array
-    const requests = data.finalRequests || [];
-
     tableBody.innerHTML = '';
-    requests.forEach((item, index) => {
+    data.forEach((item, index) => {
         const row = document.createElement('tr');
-        
+
         const clientCell = document.createElement('td');
-        clientCell.textContent = item[1];  // Correct index for client name
+        clientCell.textContent = item.client;  // Correct index for client name
         row.appendChild(clientCell);
 
         const requestCell = document.createElement('td');
-        requestCell.textContent = item[2];  // Correct index for request
+        requestCell.textContent = item.request;  // Correct index for request
         row.appendChild(requestCell);
 
         const totalCell = document.createElement('td');
-        totalCell.textContent = item[3];  // Correct index for total
+        totalCell.textContent = item.total;  // Correct index for total
         row.appendChild(totalCell);
 
         const averageCell = document.createElement('td');
-        if (item[4] !== undefined && item[4] !== null) {
-            averageCell.textContent = parseFloat(item[4]).toFixed(2);  // Correct index for average
+        if (item.average !== undefined && item.average !== null) {
+            averageCell.textContent = parseFloat(item.average).toFixed(2);  // Correct index for average
         } else {
             averageCell.textContent = 'N/A';  // Handle undefined or null average
         }
@@ -293,7 +287,7 @@ function updateFinalTable(data) {
 
         const trashCell = document.createElement('td');
         const button = document.createElement('button');
-        button.dataset.clientId = item[0];  // Store clientId in dataset
+        button.dataset.clientId = item.clientId;  // Store clientId in dataset
         const img = document.createElement('img');
         img.src = '/static/trash.png';
         img.alt = 'Trash';
@@ -307,6 +301,7 @@ function updateFinalTable(data) {
         tableBody.appendChild(row);
     });
 }
+
 
 
         function handleDelete(event) {
