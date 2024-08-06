@@ -179,7 +179,7 @@
     </div>
 
     <script>
- document.getElementById('clientFormPart1').addEventListener('submit', function(event) {
+document.getElementById('clientFormPart1').addEventListener('submit', function(event) {
     event.preventDefault();
     const formData = new FormData(this);
     fetch('/submit-form-part1', {
