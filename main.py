@@ -3,6 +3,8 @@ import sqlite3
 import os
 import json
 
+# Database Path
+
 DATABASE = os.path.join(os.path.dirname(__file__), 'sponsor_dashboard.db')
 
 def get_db():
