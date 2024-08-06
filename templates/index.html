@@ -179,186 +179,178 @@
     </div>
 
     <script>
-document.getElementById('clientFormPart1').addEventListener('submit', function(event) {
-    event.preventDefault();
-    const formData = new FormData(this);
-    fetch('/submit-form-part1', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Form part 1 submission data:', data);  // Debugging line
-        if (data.partialRequests) {
-            updatePartialRequestsTable(data.partialRequests);
-        } else {
-            console.error('Error in response:', data);
-        }
-        this.reset();
-    })
-    .catch(error => console.error('Error:', error));
-});
-
-document.getElementById('clientFormPart2').addEventListener('submit', function(event) {
-    event.preventDefault();
-    const formData = new FormData(this);
-    fetch('/submit-form-part2', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Form part 2 submission data:', data);  // Debugging line
-        if (data.finalRequests) {
-            document.getElementById('clientFormPart2').style.display = 'none';
-            updateFinalTable(data.finalRequests);
-        } else {
-            console.error('Error in response:', data);
-        }
-        this.reset();
-        fetch('/get-partial-requests')
+        document.getElementById('clientFormPart1').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('/submit-form-part1', {
+                method: 'POST',
+                body: formData
+            })
             .then(response => response.json())
             .then(data => {
+                console.log('Form part 1 submission data:', data);  // Debugging line
+                updatePartialRequestsTable(data);
+                this.reset();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        document.getElementById('clientFormPart2').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('/submit-form-part2', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Form part 2 submission data:', data);  // Debugging line
+                document.getElementById('clientFormPart2').style.display = 'none';
+                updateFinalTable(data.finalRequests);
+                this.reset();
+                fetch('/get-partial-requests')
+                    .then(response => response.json())
+                    .then(data => {
+                        updatePartialRequestsTable(data);
+                    })
+                    .catch(error => console.error('Error fetching partial requests: ', error));
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function updatePartialRequestsTable(data) {
+            console.log('Updating partial requests table with data:', data);
+            const tableBody = document.querySelector('#partialRequestsTable tbody');
+            const noRequestsMessage = document.getElementById('noRequestsMessage');
+
+            tableBody.innerHTML = '';
+            if (data.length === 0) {
+                noRequestsMessage.style.display = 'block'; 
+            } else {
+                noRequestsMessage.style.display = 'none';
+                data.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    const clientCell = document.createElement('td');
+                    clientCell.textContent = item.client;
+                    row.appendChild(clientCell);
+
+                    const requestCell = document.createElement('td');
+                    requestCell.textContent = item.request;
+                    row.appendChild(requestCell);
+
+                    const selectCell = document.createElement('td');
+                    const selectButton = document.createElement('button');
+                    selectButton.textContent = 'Select';
+                    selectButton.dataset.index = index;
+                    selectButton.dataset.clientId = item.clientId;
+                    selectButton.addEventListener('click', function() {
+                        document.getElementById('clientId').value = item.clientId;
+                        document.querySelector('.identifier').textContent = 'Request for: ' + item.client;
+                        document.getElementById('clientFormPart2').style.display = 'block';
+                        document.getElementById('clientData').value = JSON.stringify(item);
+                    });
+                    selectCell.appendChild(selectButton);
+                    row.appendChild(selectCell);
+
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+
+        function updateFinalTable(data) {
+            console.log('Updating final table with data:', data);  // Debugging line
+            const tableBody = document.querySelector('#finalRequestsTable tbody');
+            tableBody.innerHTML = '';
+            data.forEach((item, index) => {
+                const row = document.createElement('tr');
+                
+                const clientCell = document.createElement('td');
+                clientCell.textContent = item[1];  // Correct index for client name
+                row.appendChild(clientCell);
+
+                const requestCell = document.createElement('td');
+                requestCell.textContent = item[2];  // Correct index for request
+                row.appendChild(requestCell);
+
+                const totalCell = document.createElement('td');
+                totalCell.textContent = item[3];  // Correct index for total
+                row.appendChild(totalCell);
+
+                const averageCell = document.createElement('td');
+                if (item[4] !== undefined && item[4] !== null) {
+                    averageCell.textContent = parseFloat(item[4]).toFixed(2);  // Correct index for average
+                } else {
+                    averageCell.textContent = 'N/A';  // Handle undefined or null average
+                }
+                row.appendChild(averageCell);
+
+                const trashCell = document.createElement('td');
+                const button = document.createElement('button');
+                button.dataset.clientId = item[0];  // Store clientId in dataset
+                const img = document.createElement('img');
+                img.src = '/static/trash.png';
+                img.alt = 'Trash';
+                img.style.width = '20px';
+
+                button.appendChild(img);
+                trashCell.appendChild(button);
+                row.appendChild(trashCell);
+                button.addEventListener('click', handleDelete);
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        function handleDelete(event) {
+            const button = event.currentTarget;
+            const clientId = button.dataset.clientId;
+
+            const modal = document.getElementById('deleteModal');
+            modal.style.display = 'block';
+
+            const confirmDelete = document.getElementById('confirmDelete');
+            const cancelDelete = document.getElementById('cancelDelete');
+            const closeModal = document.getElementsByClassName('close')[0];
+
+            confirmDelete.onclick = function() {
+                fetch(`/delete-entry/${clientId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    updateFinalTable(data);
+                    modal.style.display = 'none';
+                })
+                .catch(error => console.error('Error:', error));
+                modal.style.display = 'none';
+            }
+
+            cancelDelete.onclick = function() {
+                modal.style.display = 'none';
+            }
+
+            closeModal.onclick = function() {
+                modal.style.display = 'none';
+            }
+        }
+
+        window.onload = function() {
+            fetch('/get-partial-requests')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Partial requests data:', data);
                 updatePartialRequestsTable(data);
             })
-            .catch(error => console.error('Error fetching partial requests: ', error));
-    })
-    .catch(error => console.error('Error:', error));
-});
+            .catch(error => console.error('Error fetching partial requests:', error));
 
-function updatePartialRequestsTable(data) {
-    const tableBody = document.querySelector('#partialRequestsTable tbody');
-    const noRequestsMessage = document.getElementById('noRequestsMessage');
-
-    tableBody.innerHTML = '';
-    if (data.length === 0) {
-        noRequestsMessage.style.display = 'block'; 
-    } else {
-        noRequestsMessage.style.display = 'none';
-        data.forEach((item, index) => {
-            const row = document.createElement('tr');
-            const clientCell = document.createElement('td');
-            clientCell.textContent = item.client;
-            row.appendChild(clientCell);
-
-            const requestCell = document.createElement('td');
-            requestCell.textContent = item.request;
-            row.appendChild(requestCell);
-
-            const selectCell = document.createElement('td');
-            const selectButton = document.createElement('button');
-            selectButton.textContent = 'Select';
-            selectButton.dataset.index = index;
-            selectButton.addEventListener('click', function() {
-                document.getElementById('clientId').value = item.clientId;
-                document.querySelector('.identifier').textContent = 'Request for: ' + item.client;
-                document.getElementById('clientFormPart2').style.display = 'block';
-
-                document.getElementById('clientData').value = JSON.stringify(item);
-            });
-            selectCell.appendChild(selectButton);
-            row.appendChild(selectCell);
-
-            tableBody.appendChild(row);
-        });
-    }
-}
-
-function updateFinalTable(data) {
-    const tableBody = document.querySelector('#finalRequestsTable tbody');
-    tableBody.innerHTML = '';
-    data.forEach((item, index) => {
-        const row = document.createElement('tr');
-        
-        const clientCell = document.createElement('td');
-        clientCell.textContent = item.client;
-        row.appendChild(clientCell);
-
-        const requestCell = document.createElement('td');
-        requestCell.textContent = item.request;
-        row.appendChild(requestCell);
-
-        const totalCell = document.createElement('td');
-        totalCell.textContent = item.total;
-        row.appendChild(totalCell);
-
-        const averageCell = document.createElement('td');
-        if (item.average !== undefined && item.average !== null) {
-            averageCell.textContent = parseFloat(item.average).toFixed(2);
-        } else {
-            averageCell.textContent = 'N/A';
+            fetch('/get-final-requests')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Final requests data:', data);
+                updateFinalTable(data);
+            })
+            .catch(error => console.error('Error fetching final requests:', error));
         }
-        row.appendChild(averageCell);
-
-        const trashCell = document.createElement('td');
-        const button = document.createElement('button');
-        button.dataset.index = index;
-        const img = document.createElement('img');
-        img.src = '/static/trash.png';
-        img.alt = 'Trash';
-        img.style.width = '20px';
-
-        button.appendChild(img);
-        trashCell.appendChild(button);
-        row.appendChild(trashCell);
-        button.addEventListener('click', handleDelete);
-
-        tableBody.appendChild(row);
-    });
-}
-
-function handleDelete(event) {
-    const button = event.currentTarget;
-    const index = button.dataset.index;
-
-    const modal = document.getElementById('deleteModal');
-    modal.style.display = 'block';
-
-    const confirmDelete = document.getElementById('confirmDelete');
-    const cancelDelete = document.getElementById('cancelDelete');
-    const closeModal = document.getElementsByClassName('close')[0];
-
-    confirmDelete.onclick = function() {
-        fetch(`/delete-entry/${index}`, {
-            method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(data => {
-            updateFinalTable(data);
-            modal.style.display = 'none';
-        })
-        .catch(error => console.error('Error:', error));
-        modal.style.display = 'none';
-    }
-
-    cancelDelete.onclick = function() {
-        modal.style.display = 'none';
-    }
-
-    closeModal.onclick = function() {
-        modal.style.display = 'none';
-    }
-}
-
-window.onload = function() {
-    fetch('/get-partial-requests')
-    .then(response => response.json())
-    .then(data => {
-        console.log('Partial requests data:', data);
-        updatePartialRequestsTable(data);
-    })
-    .catch(error => console.error('Error fetching partial requests:', error));
-
-
-    fetch('/get-final-requests')
-    .then(response => response.json())
-    .then(data => {
-        console.log('Final requests data:', data);
-        updateFinalTable(data);
-    })
-    .catch(error => console.error('Error fetching final requests:', error));
-}
-
     </script>
 </body>
 </html>
