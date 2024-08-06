@@ -266,20 +266,20 @@ function updateFinalTable(data) {
         const row = document.createElement('tr');
 
         const clientCell = document.createElement('td');
-        clientCell.textContent = item.client;  // Correct index for client name
+        clientCell.textContent = item[1];  // Correct index for client name
         row.appendChild(clientCell);
 
         const requestCell = document.createElement('td');
-        requestCell.textContent = item.request;  // Correct index for request
+        requestCell.textContent = item[2];  // Correct index for request
         row.appendChild(requestCell);
 
         const totalCell = document.createElement('td');
-        totalCell.textContent = item.total;  // Correct index for total
+        totalCell.textContent = item[3];  // Correct index for total
         row.appendChild(totalCell);
 
         const averageCell = document.createElement('td');
-        if (item.average !== undefined && item.average !== null) {
-            averageCell.textContent = parseFloat(item.average).toFixed(2);  // Correct index for average
+        if (item[4] !== undefined && item[4] !== null) {
+            averageCell.textContent = parseFloat(item[4]).toFixed(2);  // Correct index for average
         } else {
             averageCell.textContent = 'N/A';  // Handle undefined or null average
         }
@@ -287,7 +287,7 @@ function updateFinalTable(data) {
 
         const trashCell = document.createElement('td');
         const button = document.createElement('button');
-        button.dataset.clientId = item.clientId;  // Store clientId in dataset
+        button.dataset.clientId = item[0];  // Store clientId in dataset
         const img = document.createElement('img');
         img.src = '/static/trash.png';
         img.alt = 'Trash';
@@ -301,6 +301,7 @@ function updateFinalTable(data) {
         tableBody.appendChild(row);
     });
 }
+
 
 
 
