@@ -6,37 +6,26 @@ import json
 # Database Path
 DATABASE = os.path.join(os.path.dirname(__file__), 'sponsor_dashboard.db')
 
+
 def get_db():
     conn = sqlite3.connect(DATABASE)
-    conn.execute('PRAGMA journal_mode=WAL;')  # Enable write-ahead logging
     return conn
 
-def create_tables():
-    conn = get_db()
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS partial_requests (
-            clientId INTEGER PRIMARY KEY AUTOINCREMENT,
-            client TEXT NOT NULL,
-            request TEXT NOT NULL,
-            atRisk INTEGER NOT NULL,
-            quarter INTEGER NOT NULL,
-            revenue INTEGER NOT NULL
-        )
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS final_requests (
-            clientId INTEGER PRIMARY KEY,
-            client TEXT NOT NULL,
-            request TEXT NOT NULL,
-            total INTEGER NOT NULL,
-            average REAL NOT NULL
-        )
-    ''')
-    conn.commit()
-    conn.close()
+def check_db_writability():
+    try:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY)")
+        c.execute("INSERT INTO test (id) VALUES (1)")
+        conn.commit()
+        c.execute("DROP TABLE test")
+        conn.commit()
+        conn.close()
+        print("Database is writable")
+    except sqlite3.OperationalError as e:
+        print(f"Database is not writable: {e}")
 
-create_tables()
+check_db_writability()
 
 app = Flask(__name__)
 
@@ -60,13 +49,15 @@ def submit_form_part1():
                      VALUES (?, ?, ?, ?, ?)''',
                   (client, request_text, atRisk, quarter, revenue))
         conn.commit()
-
+        
         partial_requests = query_db('SELECT * FROM partial_requests')
         conn.close()
-
+        
         return jsonify({'partialRequests': partial_requests})
     except Exception as e:
+        app.logger.error('Error in submit-form-part1: %s', str(e))
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/submit-form-part2', methods=['POST'])
 def submit_form_part2():
@@ -95,45 +86,11 @@ def submit_form_part2():
                   (clientId, client_data['client'], client_data['request'], total, average))
         c.execute('DELETE FROM partial_requests WHERE clientId = ?', [clientId])
         conn.commit()
-
+        
         final_requests = query_db('SELECT * FROM final_requests ORDER BY total DESC')
         conn.close()
-
+        
         return jsonify({'finalRequests': final_requests})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/get-partial-requests', methods=['GET'])
-def get_partial_requests():
-    try:
-        partial_requests = query_db('SELECT * FROM partial_requests')
-        return jsonify(partial_requests)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/get-final-requests', methods=['GET'])
-def get_final_requests():
-    try:
-        final_requests = query_db('SELECT * FROM final_requests ORDER BY total DESC')
-        return jsonify(final_requests)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/delete-entry/<int:index>', methods=['DELETE'])
-def delete_entry(index):
-    try:
-        final_requests = query_db('SELECT rowid, * FROM final_requests')
-        if 0 <= index < len(final_requests):
-            clientId = final_requests[index][1]
-            conn = get_db()
-            c = conn.cursor()
-            c.execute('DELETE FROM final_requests WHERE clientId = ?', [clientId])
-            conn.commit()
-            final_requests = query_db('SELECT * FROM final_requests ORDER BY total DESC')
-            conn.close()
-            return jsonify(final_requests)
-        else:
-            return jsonify({'error': 'Index out of range'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
