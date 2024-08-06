@@ -4,12 +4,27 @@ import os
 import json
 
 # Database Path
-
 DATABASE = os.path.join(os.path.dirname(__file__), 'sponsor_dashboard.db')
 
 def get_db():
     conn = sqlite3.connect(DATABASE)
     return conn
+
+def check_db_writability():
+    try:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY)")
+        c.execute("INSERT INTO test (id) VALUES (1)")
+        conn.commit()
+        c.execute("DROP TABLE test")
+        conn.commit()
+        conn.close()
+        print("Database is writable")
+    except sqlite3.OperationalError as e:
+        print(f"Database is not writable: {e}")
+
+check_db_writability()
 
 app = Flask(__name__)
 
