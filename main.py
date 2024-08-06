@@ -1,8 +1,10 @@
 import sqlite3
 from flask import Flask, request, jsonify, render_template
+import os
 import json
 
-DATABASE = 'sponsor_dashboard.db'
+# Use the /tmp directory for the SQLite database in Vercel
+DATABASE = '/tmp/sponsor_dashboard.db'
 
 def get_db():
     conn = sqlite3.connect(DATABASE)
@@ -69,10 +71,8 @@ def submit_form_part1():
         partial_requests = query_db('SELECT * FROM partial_requests')
         conn.close()
 
-        print("Partial Requests after form 1 submission:", partial_requests)
         return jsonify({'partialRequests': partial_requests})
     except Exception as e:
-        print(f"Error in submit_form_part1: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/submit-form-part2', methods=['POST'])
@@ -80,7 +80,7 @@ def submit_form_part2():
     try:
         data = request.form
         clientId = data.get('clientId')
-        client_data = json.loads(data.get('clientData'))  # Retrieve and parse the full client data
+        client_data = json.loads(data.get('clientData'))
 
         scout = int(data.get('scout'))
         country = int(data.get('country'))
@@ -93,7 +93,7 @@ def submit_form_part2():
 
         atRisk, quarter, revenue = partial_request[3], partial_request[4], partial_request[5]
         total = atRisk + quarter + revenue + scout + country + resources + strategic
-        average = total / 7.0  # Ensure average is a float
+        average = total / 7.0
 
         conn = get_db()
         c = conn.cursor()
@@ -108,7 +108,6 @@ def submit_form_part2():
 
         return jsonify({'finalRequests': final_requests})
     except Exception as e:
-        print(f"Error in submit_form_part2: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/get-partial-requests', methods=['GET'])
@@ -117,7 +116,6 @@ def get_partial_requests():
         partial_requests = fetch_partial_requests()
         return jsonify(partial_requests)
     except Exception as e:
-        print(f"Error in get_partial_requests: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/get-final-requests', methods=['GET'])
@@ -126,7 +124,6 @@ def get_final_requests():
         final_requests = query_db('SELECT * FROM final_requests ORDER BY total DESC')
         return jsonify(final_requests)
     except Exception as e:
-        print(f"Error in get_final_requests: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/delete-entry/<int:clientId>', methods=['DELETE'])
@@ -140,7 +137,6 @@ def delete_entry(clientId):
         conn.close()
         return jsonify(final_requests)
     except Exception as e:
-        print(f"Error in delete_entry: {e}")
         return jsonify({'error': str(e)}), 500
 
 def fetch_partial_requests():
@@ -149,5 +145,5 @@ def fetch_partial_requests():
             for row in partial_requests]
 
 if __name__ == '__main__':
-    create_tables()  # Ensure tables are created before running the app
+    create_tables()
     app.run(debug=True)
