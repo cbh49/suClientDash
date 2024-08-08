@@ -3,8 +3,15 @@ from flask import Flask, request, jsonify, render_template
 import os
 import json
 
+
+
 # Use the /tmp directory for the SQLite database in Vercel
-DATABASE = '/tmp/sponsor_dashboard.db'
+if os.getenv("VERCEL_ENV"):
+    # Running on Vercel
+    DATABASE = '/tmp/sponsor_dashboard.db'
+else:
+    # Running locally
+    DATABASE = './sponsor_dashboard.db'
 
 def get_db():
     conn = sqlite3.connect(DATABASE)
@@ -20,7 +27,9 @@ def create_tables():
             request TEXT NOT NULL,
             atRisk INTEGER NOT NULL,
             quarter INTEGER NOT NULL,
-            revenue INTEGER NOT NULL
+            revenue INTEGER NOT NULL,
+            comp INTEGER NOT NULL,
+            urgency INTEGER NOT NULL
         )
     ''')
     c.execute('''
@@ -37,6 +46,18 @@ def create_tables():
 
 create_tables()
 
+app = Flask(__name__)
+
+
+@app.route('/get-partial-requests', methods=['GET'])
+def get_partial_requests():
+    try:
+        partial_requests = fetch_partial_requests()
+        return jsonify(partial_requests)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 def query_db(query, args=(), one=False):
     conn = get_db()
     cur = conn.execute(query, args)
@@ -45,7 +66,7 @@ def query_db(query, args=(), one=False):
     conn.close()
     return (rv[0] if rv else None) if one else rv
 
-app = Flask(__name__)
+
 
 @app.route('/')
 def form():
@@ -54,26 +75,61 @@ def form():
 @app.route('/submit-form-part1', methods=['POST'])
 def submit_form_part1():
     try:
-        data = request.form
+        print("Received form submission")  # Confirm function is called
+
+        # Try to retrieve and print the entire form data
+        try:
+            data = request.form
+            print("Form data received:", data)  # Print the entire form data for debugging
+        except Exception as data_error:
+            print(f"Error accessing form data: {data_error}")
+            return jsonify({'error': f'Error accessing form data: {data_error}'}), 500
+
         client = data.get('client')
         request_text = data.get('request')
-        atRisk = int(data.get('atRisk'))
-        quarter = int(data.get('quarter'))
-        revenue = int(data.get('revenue'))
+
+        # Print received values to debug
+        print(f"Client: {client}")
+        print(f"Request Text: {request_text}")
+
+        # Insert dummy values for testing if necessary
+        atRisk = 0
+        quarter = 0
+        revenue = 0
+        comp = 0
+        urgency = 0
 
         conn = get_db()
         c = conn.cursor()
-        c.execute('''INSERT INTO partial_requests (client, request, atRisk, quarter, revenue)
-                     VALUES (?, ?, ?, ?, ?)''',
-                  (client, request_text, atRisk, quarter, revenue))
-        conn.commit()
+        try:
+            c.execute('''INSERT INTO partial_requests (client, request, atRisk, quarter, revenue, comp, urgency)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                      (client, request_text, atRisk, quarter, revenue, comp, urgency))
+            conn.commit()
+            print("Data inserted successfully")  # Confirm successful insertion
+        except Exception as db_error:
+            print(f"Database Insertion Error: {db_error}")
+            return jsonify({'error': f'Database Insertion Error: {db_error}'}), 500
 
-        partial_requests = fetch_partial_requests()
+        # Fetch the clientId of the newly inserted record
+        clientId = c.lastrowid
+        print(f"Generated clientId: {clientId}")  # Check what clientId is being generated
+
         conn.close()
+
+        # Fetch the updated list of partial requests
+        partial_requests = fetch_partial_requests()
+
+        # Ensure that the clientId is correctly added to the response
+        for request in partial_requests:
+            if request['client'] == client and request['request'] == request_text:
+                request['clientId'] = clientId
 
         return jsonify(partial_requests)
     except Exception as e:
+        print(f"Error: {e}")
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/submit-form-part2', methods=['POST'])
 def submit_form_part2():
@@ -82,18 +138,24 @@ def submit_form_part2():
         clientId = data.get('clientId')
         client_data = json.loads(data.get('clientData'))
 
+        print(f"Received clientId: {clientId}")
+        print(f"Received clientData: {client_data}")
+
         scout = int(data.get('scout'))
         country = int(data.get('country'))
         resources = int(data.get('resources'))
         strategic = int(data.get('strategic'))
 
+        print(f"Received clientId: {clientId}")
+        print(f"Received clientData: {client_data}")
+
         partial_request = query_db('SELECT * FROM partial_requests WHERE clientId = ?', [clientId], one=True)
         if partial_request is None:
             return jsonify({'error': 'Partial request not found'}), 404
 
-        atRisk, quarter, revenue = partial_request[3], partial_request[4], partial_request[5]
-        total = atRisk + quarter + revenue + scout + country + resources + strategic
-        average = total / 7.0
+        atRisk, quarter, revenue, comp, urgency = partial_request[3], partial_request[4], partial_request[5],partial_request[6], partial_request[7]
+        total = atRisk + quarter + revenue + comp + urgency + scout + country + resources + strategic
+        average = total / 9.0
 
         conn = get_db()
         c = conn.cursor()
@@ -112,13 +174,10 @@ def submit_form_part2():
 
 
 
-@app.route('/get-partial-requests', methods=['GET'])
-def get_partial_requests():
-    try:
-        partial_requests = fetch_partial_requests()
-        return jsonify(partial_requests)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+def fetch_partial_requests():
+    partial_requests = query_db('SELECT * FROM partial_requests')
+    return [dict(clientId=row[0], client=row[1], request=row[2], atRisk=row[3], quarter=row[4], revenue=row[5], comp=row[6], urgency=row[7])
+            for row in partial_requests]
 
 @app.route('/get-final-requests', methods=['GET'])
 def get_final_requests():
@@ -143,7 +202,7 @@ def delete_entry(clientId):
 
 def fetch_partial_requests():
     partial_requests = query_db('SELECT * FROM partial_requests')
-    return [dict(clientId=row[0], client=row[1], request=row[2], atRisk=row[3], quarter=row[4], revenue=row[5])
+    return [dict(clientId=row[0], client=row[1], request=row[2], atRisk=row[3], quarter=row[4], revenue=row[5], comp=row[6], urgency=row[7])
             for row in partial_requests]
 
 if __name__ == '__main__':
