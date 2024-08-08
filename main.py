@@ -3,8 +3,6 @@ from flask import Flask, request, jsonify, render_template
 import os
 import json
 
-
-
 # Use the /tmp directory for the SQLite database in Vercel
 if os.getenv("VERCEL_ENV"):
     # Running on Vercel
@@ -24,7 +22,7 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS partial_requests (
             clientId INTEGER PRIMARY KEY AUTOINCREMENT,
             client TEXT NOT NULL,
-            request TEXT NOT NULL,
+            request_text TEXT NOT NULL,  # Changed from request to request_text
             atRisk INTEGER NOT NULL,
             quarter INTEGER NOT NULL,
             revenue INTEGER NOT NULL,
@@ -36,7 +34,7 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS final_requests (
             clientId INTEGER PRIMARY KEY,
             client TEXT NOT NULL,
-            request TEXT NOT NULL,
+            request_text TEXT NOT NULL,  # Changed from request to request_text
             total INTEGER NOT NULL,
             average REAL NOT NULL
         )
@@ -48,7 +46,6 @@ create_tables()
 
 app = Flask(__name__)
 
-
 @app.route('/get-partial-requests', methods=['GET'])
 def get_partial_requests():
     try:
@@ -57,7 +54,6 @@ def get_partial_requests():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
 def query_db(query, args=(), one=False):
     conn = get_db()
     cur = conn.execute(query, args)
@@ -65,8 +61,6 @@ def query_db(query, args=(), one=False):
     cur.close()
     conn.close()
     return (rv[0] if rv else None) if one else rv
-
-
 
 @app.route('/')
 def form():
@@ -86,7 +80,7 @@ def submit_form_part1():
             return jsonify({'error': f'Error accessing form data: {data_error}'}), 500
 
         client = data.get('client')
-        request_text = data.get('request')
+        request_text = data.get('request_text')  # Changed from request to request_text
 
         # Print received values to debug
         print(f"Client: {client}")
@@ -102,7 +96,7 @@ def submit_form_part1():
         conn = get_db()
         c = conn.cursor()
         try:
-            c.execute('''INSERT INTO partial_requests (client, request, atRisk, quarter, revenue, comp, urgency)
+            c.execute('''INSERT INTO partial_requests (client, request_text, atRisk, quarter, revenue, comp, urgency)
                         VALUES (?, ?, ?, ?, ?, ?, ?)''',
                       (client, request_text, atRisk, quarter, revenue, comp, urgency))
             conn.commit()
@@ -122,14 +116,13 @@ def submit_form_part1():
 
         # Ensure that the clientId is correctly added to the response
         for request in partial_requests:
-            if request['client'] == client and request['request'] == request_text:
+            if request['client'] == client and request['request_text'] == request_text:
                 request['clientId'] = clientId
 
         return jsonify(partial_requests)
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/submit-form-part2', methods=['POST'])
 def submit_form_part2():

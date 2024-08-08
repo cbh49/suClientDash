@@ -12,7 +12,7 @@ def initialize_database():
     c.execute('''CREATE TABLE IF NOT EXISTS partial_requests
                  (clientId INTEGER PRIMARY KEY AUTOINCREMENT, 
                   client TEXT, 
-                  request TEXT, 
+                  request_text TEXT,  # Changed from request to request_text
                   atRisk INTEGER, 
                   quarter INTEGER, 
                   revenue INTEGER, 
@@ -23,7 +23,7 @@ def initialize_database():
     c.execute('''CREATE TABLE IF NOT EXISTS final_requests
                  (clientId INTEGER PRIMARY KEY, 
                   client TEXT, 
-                  request TEXT, 
+                  request_text TEXT,  # Changed from request to request_text
                   total INTEGER, 
                   average REAL)''')
     
@@ -31,3 +31,4 @@ def initialize_database():
     conn.close()
 
 initialize_database()
+
