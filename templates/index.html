@@ -79,8 +79,7 @@
                     <input type="radio" id="urgencyNo" name="urgency" value="3">
                     <label for="urgencyNo" class="inline-label">No</label>
                 </div>
-                <button type="submit" id="submitBtn1">Submit Part 1</button>
-            </form>
+                
 
             <div class="table-container">
                 <h1>Open Client Solutions Requests</h1>
@@ -183,7 +182,6 @@
 document.getElementById('clientFormPart2').addEventListener('submit', function(event) {
     event.preventDefault();
     const formData = new FormData(this);
-    console.log('FormData being sent for part 2:', Object.fromEntries(formData.entries()));  // Debugging line
     fetch('/submit-form-part2', {
         method: 'POST',
         body: formData
@@ -210,11 +208,7 @@ function updatePartialRequestsTable(data) {
     const noRequestsMessage = document.getElementById('noRequestsMessage');
 
     tableBody.innerHTML = '';
-    if (data.error) {
-        console.error('Error fetching data:', data.error);
-        noRequestsMessage.style.display = 'block';
-        noRequestsMessage.textContent = 'Error: ' + data.error;
-    } else if (data.length === 0) {
+    if (data.length === 0) {
         noRequestsMessage.style.display = 'block';
     } else {
         noRequestsMessage.style.display = 'none';
@@ -232,9 +226,9 @@ function updatePartialRequestsTable(data) {
             const selectButton = document.createElement('button');
             selectButton.textContent = 'Select';
             selectButton.dataset.index = index;
-            selectButton.dataset.clientId = item.clientId;  // Ensure clientId is set
+            selectButton.dataset.clientId = item.clientId;
             selectButton.addEventListener('click', function() {
-                document.getElementById('clientId').value = item.clientId;  // Set clientId in hidden input field
+                document.getElementById('clientId').value = item.clientId;
                 document.querySelector('.identifier').textContent = 'Request for: ' + item.client;
                 document.getElementById('clientFormPart2').style.display = 'block';
                 document.getElementById('clientData').value = JSON.stringify(item);
@@ -246,7 +240,6 @@ function updatePartialRequestsTable(data) {
         });
     }
 }
-
 
 function updateFinalTable(data) {
     console.log('Updating final table with data:', data);
