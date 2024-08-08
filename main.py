@@ -110,6 +110,8 @@ def submit_form_part2():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+
 @app.route('/get-partial-requests', methods=['GET'])
 def get_partial_requests():
     try:
