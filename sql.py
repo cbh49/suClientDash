@@ -6,11 +6,22 @@ def initialize_database():
     
     # Create table for partial requests
     c.execute('''CREATE TABLE IF NOT EXISTS partial_requests
-                 (clientId TEXT PRIMARY KEY, client TEXT, request TEXT, atRisk INTEGER, quarter INTEGER, revenue INTEGER)''')
+                 (clientId INTEGER PRIMARY KEY AUTOINCREMENT, 
+                  client TEXT, 
+                  request TEXT, 
+                  atRisk INTEGER, 
+                  quarter INTEGER, 
+                  revenue INTEGER, 
+                  comp INTEGER, 
+                  urgency INTEGER)''')
     
     # Create table for final requests
     c.execute('''CREATE TABLE IF NOT EXISTS final_requests
-                 (clientId TEXT PRIMARY KEY, client TEXT, request TEXT, total INTEGER, average REAL)''')
+                 (clientId INTEGER PRIMARY KEY, 
+                  client TEXT, 
+                  request TEXT, 
+                  total INTEGER, 
+                  average REAL)''')
     
     conn.commit()
     conn.close()

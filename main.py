@@ -20,7 +20,9 @@ def create_tables():
             request TEXT NOT NULL,
             atRisk INTEGER NOT NULL,
             quarter INTEGER NOT NULL,
-            revenue INTEGER NOT NULL
+            revenue INTEGER NOT NULL,
+            comp INTEGER NOT NULL,
+            urgency INTEGER NOT NULL
         )
     ''')
     c.execute('''
@@ -60,12 +62,14 @@ def submit_form_part1():
         atRisk = int(data.get('atRisk'))
         quarter = int(data.get('quarter'))
         revenue = int(data.get('revenue'))
+        comp = int(data.get('comp'))
+        urgency = int(data.get('urgency'))
 
         conn = get_db()
         c = conn.cursor()
-        c.execute('''INSERT INTO partial_requests (client, request, atRisk, quarter, revenue)
-                     VALUES (?, ?, ?, ?, ?)''',
-                  (client, request_text, atRisk, quarter, revenue))
+        c.execute('''INSERT INTO partial_requests (client, request, atRisk, quarter, revenue, comp, urgency)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                  (client, request_text, atRisk, quarter, revenue, comp, urgency))
         conn.commit()
 
         partial_requests = fetch_partial_requests()
@@ -74,6 +78,7 @@ def submit_form_part1():
         return jsonify(partial_requests)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/submit-form-part2', methods=['POST'])
 def submit_form_part2():
@@ -91,9 +96,9 @@ def submit_form_part2():
         if partial_request is None:
             return jsonify({'error': 'Partial request not found'}), 404
 
-        atRisk, quarter, revenue = partial_request[3], partial_request[4], partial_request[5]
-        total = atRisk + quarter + revenue + scout + country + resources + strategic
-        average = total / 7.0
+        atRisk, quarter, revenue, comp, urgency = partial_request[3], partial_request[4], partial_request[5], partial_request[6], partial_request[7]
+        total = atRisk + quarter + revenue + comp + urgency + scout + country + resources + strategic
+        average = total / 9.0  # Adjusted for the new total number of factors
 
         conn = get_db()
         c = conn.cursor()
@@ -109,6 +114,7 @@ def submit_form_part2():
         return jsonify(final_requests)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 
 
